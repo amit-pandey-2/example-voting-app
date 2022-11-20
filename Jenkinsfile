@@ -18,20 +18,39 @@ pipeline{
     tools{
         maven 'maven3.8'
     }
-    stages {
-    stage('Git Checkout') {
-      steps {
-        checkout scm
-      }
+    environment{
+        ECS_CLUSTER  = "VOTE"
     }
-    stage('Build Docker Image') {
-      parallel {
-        stage('Build Docker Image') {
-          steps {
-            sh 'cd vote && sudo docker build . -t   483718772154.dkr.ecr.us-east-1.amazonaws.com/vote:${BUILD_NUMBER}'
-            sh 'sudo docker push 483718772154.dkr.ecr.us-east-1.amazonaws.com/vote:${BUILD_NUMBER}'
-          }
+    stages{
+        stage("First Stage"){
+            steps{
+                sh "echo hello"
+            }
         }
+        stage("Parallel Stages"){
+            parallel{
+                stage("Second Stage"){
+                    agent {label 'windows'}
+                    steps{
+                        sh "echo windows"
+                        sh "sleep 10"
+                    }
+                }
+                stage("Third Stage"){
+                    steps{
+                        sh "echo linux"
+                        sh "sleep 10"
+                    }
+                }
+                stage("Fourth Stage"){
+                    steps{
+                        sh "echo linux"
+                        sh "sleep 10"
+                    }
+                }
+            }
+        }
+
     }
     post{
         always{
@@ -39,4 +58,3 @@ pipeline{
         }
     }
 }
-    }
