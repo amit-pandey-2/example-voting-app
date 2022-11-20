@@ -21,37 +21,19 @@ pipeline{
     environment{
         ECS_CLUSTER  = "VOTE"
     }
-    stages{
-        stage("First Stage"){
-            steps{
-                sh "echo hello"
-            }
-        }
-        stage("Parallel Stages"){
-            parallel{
-                stage("Second Stage"){
-                    agent {label 'windows'}
-                    steps{
-                        sh "echo windows"
-                        sh "sleep 10"
-                    }
-                }
-                stage("Third Stage"){
-                    steps{
-                        sh "echo linux"
-                        sh "sleep 10"
-                    }
-                }
-                stage("Fourth Stage"){
-                    steps{
-                        sh "echo linux"
-                        sh "sleep 10"
-                    }
-                }
-            }
-        }
-
+    stages {
+    stage('Git Checkout') {
+      steps {
+        checkout scm
+      }
     }
+    }
+        stage('Build Docker Image') {
+          steps {
+            sh 'cd vote && sudo docker build . -t  483718772154.dkr.ecr.us-east-1.amazonaws.com/vote:${BUILD_NUMBER}'
+            sh 'sudo docker push  483718772154.dkr.ecr.us-east-1.amazonaws.com/vote:${BUILD_NUMBER}'
+          }
+        }
     post{
         always{
             echo "Running always"
