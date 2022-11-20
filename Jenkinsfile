@@ -1,14 +1,29 @@
-pipeline {
-  agent {
-    label 'slave'
-  }
-  stages {
+pipeline{
+    agent {label 'slave'}
+    options{
+        buildDiscarder(logRotator(daysToKeepStr: '7'))
+        disableConcurrentBuilds()
+        timeout(time: 2, unit : 'MINUTES')
+        retry(3)
+    }
+    parameters{
+        string(name: 'BRANCH', defaultValue: 'master')
+        booleanParam(name: 'Demo', defaultValue: false )
+        choice(name: 'OPERATION', choices: ['A', 'S', 'M', 'D'])
+    }
+    triggers{
+        cron('H */4 * * *')
+        pollSCM('H */4 * * *')
+    }
+    tools{
+        maven 'maven3.8'
+    }
+    stages {
     stage('Git Checkout') {
       steps {
         checkout scm
       }
     }
-
     stage('Build Docker Image') {
       parallel {
         stage('Build Docker Image') {
@@ -16,6 +31,11 @@ pipeline {
             sh 'cd vote && sudo docker build . -t   483718772154.dkr.ecr.us-east-1.amazonaws.com/vote:${BUILD_NUMBER}'
             sh 'sudo docker push 483718772154.dkr.ecr.us-east-1.amazonaws.com/vote:${BUILD_NUMBER}'
           }
+        }
+    }
+    post{
+        always{
+            echo "Running always"
         }
     }
 }
